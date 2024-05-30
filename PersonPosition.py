@@ -41,13 +41,28 @@ class PersonPosition(OpenRTM_aist.DataFlowComponentBase):
             print("Error: Could not open camera.")
             return RTC.RTC_ERROR
 
+        # 解像度の設定
+        self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
+        self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
+
         self.model = YOLO('yolov8n.pt')
         return RTC.RTC_OK
     
     def onDeactivated(self, ec_id):
+        # カメラの解像度を取得
+        actual_width = int(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+        actual_height = int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+
+        # 比率の計算
+        aspect_ratio = actual_width / actual_height
+        aspect_ratio_str = f"{actual_width}:{actual_height}"
+
+        print(f"カメラの解像度: {actual_width}x{actual_height}")
+        print(f"比率: {aspect_ratio_str} ({aspect_ratio:.2f}:1)")
         # カメラのリリース
         self.cap.release()
         cv2.destroyAllWindows()
+        
         return RTC.RTC_OK
     
     def onExecute(self, ec_id):
@@ -58,6 +73,7 @@ class PersonPosition(OpenRTM_aist.DataFlowComponentBase):
 
         results = self.model.predict(frame, conf=0.5)
         img = results[0].plot()
+
         cv2.imshow('Webcam', img)
 
         for result in results:
@@ -70,8 +86,8 @@ class PersonPosition(OpenRTM_aist.DataFlowComponentBase):
             if len(persons):
                 xy = []
                 for i in range(len(persons)):
-                    position_x = int((((persons[i][0]) + (persons[i][2])) * 100) / 2)
-                    position_y = int((((persons[i][1]) + (persons[i][3])) * 100) / 2)
+                    position_x = int((((persons[i][0]) + (persons[i][2])) * 1600) / 2)
+                    position_y = int((((persons[i][1]) + (persons[i][3])) * 900) / 2)
                     print("-------------------------------------------------------")
                     print("現在の人の座標")
                     print("x座標{}、y座標{}".format(position_x, position_y))
@@ -79,6 +95,7 @@ class PersonPosition(OpenRTM_aist.DataFlowComponentBase):
                     print("-------------------------------------------------------")
                     xy.extend([position_x, position_y])
 
+                
                 for i in range(0, len(xy), 2):
                     self._d_Position.data = [xy[i], xy[i + 1]]
                     self._PositionOut.write(self._d_Position)

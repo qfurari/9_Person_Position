@@ -76,22 +76,25 @@ class PersonPosition(OpenRTM_aist.DataFlowComponentBase):
             cls = result.boxes.cls
             position = result.boxes.xyxyn
 
-            # 人のクラスID 0 と 猫のクラスID 15 を指定
+            # 人のクラスID 0, 猫のクラスID 15, 犬のクラスID 16 を指定
             person_class_id = 0
             cat_class_id = 15
+            dog_class_id = 16
             person_indices = (cls == person_class_id)
             cat_indices = (cls == cat_class_id)
+            dog_indices = (cls == dog_class_id)
+
             persons = position[person_indices]
             cats = position[cat_indices]
+            dogs = position[dog_indices]
 
-            if (len(persons) or len(cats)):
+            if len(persons) or len(cats) or len(dogs):
                 for i in range(len(persons)):
                     person_x = int((((persons[i][0]) + (persons[i][2])) * 640) / 2)
                     person_y = int((((persons[i][1]) + (persons[i][3])) * 480) / 2)
                     print("-------------------------------------------------------")
                     print("現在の人の座標")
                     print("x座標{}、y座標{}".format(person_x, person_y))
-                    print(" ")
                     print("-------------------------------------------------------")
                     xy.extend([person_x, person_y])
                     
@@ -101,15 +104,24 @@ class PersonPosition(OpenRTM_aist.DataFlowComponentBase):
                     print("-------------------------------------------------------")
                     print("現在の猫の座標")
                     print("x座標{}、y座標{}".format(cats_x, cats_y))
-                    print(" ")
                     print("-------------------------------------------------------")
                     xy.extend([cats_x, cats_y])
 
+                for i in range(len(dogs)):
+                    dogs_x = int((((dogs[i][0]) + (dogs[i][2])) * 640) / 2)
+                    dogs_y = int((((dogs[i][1]) + (dogs[i][3])) * 480) / 2)
+                    print("-------------------------------------------------------")
+                    print("現在の犬の座標")
+                    print("x座標{}、y座標{}".format(dogs_x, dogs_y))
+                    print("-------------------------------------------------------")
+                    xy.extend([dogs_x, dogs_y])
+
                 for i in range(0, len(xy), 2):
+                    print(f"すべてのx座標{xy[i]},すべてのy座標:{xy[i+1]}")
                     self._d_Position.data = [xy[i], xy[i + 1]]
                     self._PositionOut.write(self._d_Position)
             else:
-                print("No persons, cats detected")
+                print("No persons, cats, or dogs detected")
 
         if cv2.waitKey(1) & 0xFF == ord('q'):
             return RTC.RTC_ERROR

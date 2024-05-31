@@ -9,7 +9,7 @@ sys.path.append(".")
 import RTC
 import OpenRTM_aist
 
-# This module's spesification
+# This module's specification
 personposition_spec = ["implementation_id", "PersonPosition", 
          "type_name",         "PersonPosition", 
          "description",       "ModuleDescription", 
@@ -41,11 +41,7 @@ class PersonPosition(OpenRTM_aist.DataFlowComponentBase):
             print("Error: Could not open camera.")
             return RTC.RTC_ERROR
 
-        # 解像度の設定
-        self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
-        self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
-
-        self.model = YOLO('yolov8n.pt')
+        self.model = YOLO('yolov8s.pt')
         return RTC.RTC_OK
     
     def onDeactivated(self, ec_id):
@@ -73,34 +69,47 @@ class PersonPosition(OpenRTM_aist.DataFlowComponentBase):
 
         results = self.model.predict(frame, conf=0.5)
         img = results[0].plot()
-
         cv2.imshow('Webcam', img)
 
+        xy = []
         for result in results:
             cls = result.boxes.cls
             position = result.boxes.xyxyn
 
-            zero_indices = (cls == 0)
-            persons = position[zero_indices]
+            # 人のクラスID 0 と 猫のクラスID 15 を指定
+            person_class_id = 0
+            cat_class_id = 15
+            person_indices = (cls == person_class_id)
+            cat_indices = (cls == cat_class_id)
+            persons = position[person_indices]
+            cats = position[cat_indices]
 
-            if len(persons):
-                xy = []
+            if (len(persons) or len(cats)):
                 for i in range(len(persons)):
-                    position_x = int((((persons[i][0]) + (persons[i][2])) * 1600) / 2)
-                    position_y = int((((persons[i][1]) + (persons[i][3])) * 900) / 2)
+                    person_x = int((((persons[i][0]) + (persons[i][2])) * 640) / 2)
+                    person_y = int((((persons[i][1]) + (persons[i][3])) * 480) / 2)
                     print("-------------------------------------------------------")
                     print("現在の人の座標")
-                    print("x座標{}、y座標{}".format(position_x, position_y))
+                    print("x座標{}、y座標{}".format(person_x, person_y))
                     print(" ")
                     print("-------------------------------------------------------")
-                    xy.extend([position_x, position_y])
+                    xy.extend([person_x, person_y])
+                    
+                for i in range(len(cats)):
+                    cats_x = int((((cats[i][0]) + (cats[i][2])) * 640) / 2)
+                    cats_y = int((((cats[i][1]) + (cats[i][3])) * 480) / 2)
+                    print("-------------------------------------------------------")
+                    print("現在の猫の座標")
+                    print("x座標{}、y座標{}".format(cats_x, cats_y))
+                    print(" ")
+                    print("-------------------------------------------------------")
+                    xy.extend([cats_x, cats_y])
 
-                
                 for i in range(0, len(xy), 2):
                     self._d_Position.data = [xy[i], xy[i + 1]]
                     self._PositionOut.write(self._d_Position)
             else:
-                print("No persons detected")
+                print("No persons, cats detected")
 
         if cv2.waitKey(1) & 0xFF == ord('q'):
             return RTC.RTC_ERROR

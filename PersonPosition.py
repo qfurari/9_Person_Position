@@ -1,4 +1,6 @@
-ï»¿import cv2
+# -*- coding: shift_jis -*-
+
+import cv2
 from ultralytics import YOLO
 
 import sys
@@ -35,7 +37,7 @@ class PersonPosition(OpenRTM_aist.DataFlowComponentBase):
         return RTC.RTC_OK
 
     def onActivated(self, ec_id):
-        # ã‚«ãƒ¡ãƒ©ã®åˆæœŸåŒ–
+        # ƒJƒƒ‰‚Ì‰Šú‰»
         self.cap = cv2.VideoCapture(0)
         if not self.cap.isOpened():
             print("Error: Could not open camera.")
@@ -45,17 +47,17 @@ class PersonPosition(OpenRTM_aist.DataFlowComponentBase):
         return RTC.RTC_OK
     
     def onDeactivated(self, ec_id):
-        # ã‚«ãƒ¡ãƒ©ã®è§£åƒåº¦ã‚’å–å¾—
+        # ƒJƒƒ‰‚Ì‰ğ‘œ“x‚ğæ“¾
         actual_width = int(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         actual_height = int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
-        # æ¯”ç‡ã®è¨ˆç®—
+        # ”ä—¦‚ÌŒvZ
         aspect_ratio = actual_width / actual_height
         aspect_ratio_str = f"{actual_width}:{actual_height}"
 
-        print(f"ã‚«ãƒ¡ãƒ©ã®è§£åƒåº¦: {actual_width}x{actual_height}")
-        print(f"æ¯”ç‡: {aspect_ratio_str} ({aspect_ratio:.2f}:1)")
-        # ã‚«ãƒ¡ãƒ©ã®ãƒªãƒªãƒ¼ã‚¹
+        print(f"ƒJƒƒ‰‚Ì‰ğ‘œ“x: {actual_width}x{actual_height}")
+        print(f"”ä—¦: {aspect_ratio_str} ({aspect_ratio:.2f}:1)")
+        # ƒJƒƒ‰‚ÌƒŠƒŠ[ƒX
         self.cap.release()
         cv2.destroyAllWindows()
         
@@ -76,7 +78,7 @@ class PersonPosition(OpenRTM_aist.DataFlowComponentBase):
             cls = result.boxes.cls
             position = result.boxes.xyxyn
 
-            # äººã®ã‚¯ãƒ©ã‚¹ID 0, çŒ«ã®ã‚¯ãƒ©ã‚¹ID 15, çŠ¬ã®ã‚¯ãƒ©ã‚¹ID 16 ã‚’æŒ‡å®š
+            # l‚ÌƒNƒ‰ƒXID 0, ”L‚ÌƒNƒ‰ƒXID 15, Œ¢‚ÌƒNƒ‰ƒXID 16 ‚ğw’è
             person_class_id = 0
             cat_class_id = 15
             dog_class_id = 16
@@ -93,8 +95,8 @@ class PersonPosition(OpenRTM_aist.DataFlowComponentBase):
                     person_x = int((((persons[i][0]) + (persons[i][2])) * 640) / 2)
                     person_y = int((((persons[i][1]) + (persons[i][3])) * 480) / 2)
                     print("-------------------------------------------------------")
-                    print("ç¾åœ¨ã®äººã®åº§æ¨™")
-                    print("xåº§æ¨™{}ã€yåº§æ¨™{}".format(person_x, person_y))
+                    print("Œ»İ‚Ìl‚ÌÀ•W")
+                    print("xÀ•W{}AyÀ•W{}".format(person_x, person_y))
                     print("-------------------------------------------------------")
                     xy.extend([person_x, person_y])
                     
@@ -102,8 +104,8 @@ class PersonPosition(OpenRTM_aist.DataFlowComponentBase):
                     cats_x = int((((cats[i][0]) + (cats[i][2])) * 640) / 2)
                     cats_y = int((((cats[i][1]) + (cats[i][3])) * 480) / 2)
                     print("-------------------------------------------------------")
-                    print("ç¾åœ¨ã®çŒ«ã®åº§æ¨™")
-                    print("xåº§æ¨™{}ã€yåº§æ¨™{}".format(cats_x, cats_y))
+                    print("Œ»İ‚Ì”L‚ÌÀ•W")
+                    print("xÀ•W{}AyÀ•W{}".format(cats_x, cats_y))
                     print("-------------------------------------------------------")
                     xy.extend([cats_x, cats_y])
 
@@ -111,13 +113,13 @@ class PersonPosition(OpenRTM_aist.DataFlowComponentBase):
                     dogs_x = int((((dogs[i][0]) + (dogs[i][2])) * 640) / 2)
                     dogs_y = int((((dogs[i][1]) + (dogs[i][3])) * 480) / 2)
                     print("-------------------------------------------------------")
-                    print("ç¾åœ¨ã®çŠ¬ã®åº§æ¨™")
-                    print("xåº§æ¨™{}ã€yåº§æ¨™{}".format(dogs_x, dogs_y))
+                    print("Œ»İ‚ÌŒ¢‚ÌÀ•W")
+                    print("xÀ•W{}AyÀ•W{}".format(dogs_x, dogs_y))
                     print("-------------------------------------------------------")
                     xy.extend([dogs_x, dogs_y])
 
                 for i in range(0, len(xy), 2):
-                    print(f"ã™ã¹ã¦ã®xåº§æ¨™{xy[i]},ã™ã¹ã¦ã®yåº§æ¨™:{xy[i+1]}")
+                    print(f"‚·‚×‚Ä‚ÌxÀ•W{xy[i]},‚·‚×‚Ä‚ÌyÀ•W:{xy[i+1]}")
                     self._d_Position.data = [xy[i], xy[i + 1]]
                     self._PositionOut.write(self._d_Position)
             else:
